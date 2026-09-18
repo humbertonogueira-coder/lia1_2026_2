@@ -12,6 +12,11 @@ UCF-101 subset → frames → CNN Residual → .onnx → Streamlit (+ Telegram)
 
 ApplyEyeMakeup, ApplyLipstick, Archery, BabyCrawling, BalanceBeam, BandMarching, BaseballPitch, Basketball, BasketballDunk, BenchPress
 
+## Apresentação (Cursor + notebook)
+
+Siga o roteiro em [`ROTEIRO_APRESENTACAO.md`](ROTEIRO_APRESENTACAO.md).  
+Setup rápido: `scripts/setup_apresentacao.sh` (Linux/macOS) ou `scripts/setup_apresentacao.ps1` (Windows).
+
 ## Como executar
 
 ### 1) Ambiente
@@ -21,7 +26,11 @@ cd "Entregas - Humberto Nogueira do Carmo/Entrega 3 - Narrador de Cenas"
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+pip install ipykernel
+python -m ipykernel install --user --name narrador-cenas --display-name "Python (Narrador)"
 ```
+
+No Cursor, abra `Narrador_de_Cenas.ipynb` e selecione o kernel **Python (Narrador)**.
 
 ### 2) Treinar e exportar ONNX
 
@@ -61,6 +70,7 @@ export TELEGRAM_CHAT_ID="999999999"
 
 ```text
 Entrega 3 - Narrador de Cenas/
+├── ROTEIRO_APRESENTACAO.md   # passos para apresentar no Cursor
 ├── Narrador_de_Cenas.ipynb   # aula: treino + métricas + ONNX
 ├── app/
 │   ├── streamlit_app.py
@@ -69,6 +79,7 @@ Entrega 3 - Narrador de Cenas/
 │   ├── telegram_notify.py
 │   └── model_arch.py
 ├── scripts/
+│   ├── setup_apresentacao.sh / .ps1
 │   ├── download_ucf_subset.py
 │   └── train_and_export.py
 ├── models/narrador_cenas.onnx
