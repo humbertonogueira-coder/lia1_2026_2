@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extrai frames do UCF-101 subset, treina CNN Residual e exporta ONNX."""
+"""Treina CNN Residual no subset Kinetics/custom e exporta ONNX."""
 
 from __future__ import annotations
 
@@ -169,7 +169,7 @@ def export_onnx(model, classes, out_path: Path, device):
         "color_mode": "RGB",
         "framework": "PyTorch",
         "architecture": "CNNResidual",
-        "dataset": "UCF101_subset",
+        "dataset": "kinetics_subset_classroom",
     }
     for k, v in meta.items():
         prop = model_onnx.metadata_props.add()
@@ -183,7 +183,7 @@ def main():
     parser.add_argument(
         "--video-root",
         type=Path,
-        default=ROOT / "data" / "UCF101_subset",
+        default=ROOT / "data" / "kinetics_subset",
     )
     parser.add_argument(
         "--frames-root",
@@ -256,11 +256,14 @@ def main():
     for class_dir in sorted((args.video_root / "test").iterdir()):
         if not class_dir.is_dir():
             continue
-        vids = list(class_dir.glob("*.avi"))
+        vids = (
+            list(class_dir.glob("*.mp4"))
+            + list(class_dir.glob("*.avi"))
+            + list(class_dir.glob("*.webm"))
+        )
         if vids:
-            dest = sample_dir / f"{class_dir.name}.avi"
-            if not dest.exists():
-                dest.write_bytes(vids[0].read_bytes())
+            dest = sample_dir / f"{class_dir.name}{vids[0].suffix}"
+            dest.write_bytes(vids[0].read_bytes())
     print(f"Exemplos em {sample_dir}")
 
 

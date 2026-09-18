@@ -1,16 +1,22 @@
-# Entrega 3 — Narrador de Cenas
+# Entrega 3 — Narrador de Cenas (Kinetics + webcam)
 
-Aplicação de visão computacional que **lê um vídeo**, classifica ações quadro a quadro (subset do **UCF-101**) e gera uma **narração em português**. O modelo é treinado em PyTorch (CNN Residual da aula), exportado para **ONNX** e consumido por um app **Streamlit**, com opção de **monitoramento via Telegram**.
+Visão computacional que **lê vídeo ou webcam**, classifica ações de sala (porta, andar, levantar, palmas) e gera **narração em português**. Treino em PyTorch (CNN Residual da aula) → **ONNX** → **Streamlit** (+ Telegram).
 
 ## Pipeline
 
 ```text
-UCF-101 subset → frames → CNN Residual → .onnx → Streamlit (+ Telegram)
+Kinetics-700 subset (+ clips sentar/levantar) → frames → CNN Residual → .onnx → Streamlit (arquivo|webcam)
 ```
 
-## Classes (10 ações)
+## Classes (8)
 
-ApplyEyeMakeup, ApplyLipstick, Archery, BabyCrawling, BalanceBeam, BandMarching, BaseballPitch, Basketball, BasketballDunk, BenchPress
+`opening_door`, `closing_door`, `walking`, `clapping`, `stretching_arm`, `pushing_cart`, `standing_up`, `sitting_down`
+
+**Nota:** porta vem do **Kinetics-700** (não existe no Kinetics-400). Sentar/levantar = clips próprios (`scripts/prepare_custom_actions.md`).
+
+## Apresentação (Cursor + notebook)
+
+Siga [`ROTEIRO_APRESENTACAO.md`](ROTEIRO_APRESENTACAO.md).
 
 ## Como executar
 
@@ -21,61 +27,42 @@ cd "Entregas - Humberto Nogueira do Carmo/Entrega 3 - Narrador de Cenas"
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+pip install ipykernel yt-dlp
 ```
 
-### 2) Treinar e exportar ONNX
-
-No Colab/local, rode o notebook `Narrador_de_Cenas.ipynb` **ou**:
+### 2) Dados + treino + ONNX
 
 ```bash
-# baixa o subset (se ainda não existir) e treina
-python scripts/download_ucf_subset.py
+# YouTube (pode falhar sem cookies) OU dataset demo:
+python scripts/download_kinetics_subset.py
+# python scripts/generate_demo_dataset.py
+
+python scripts/build_frames_dataset.py
 python scripts/train_and_export.py --epochs 12
+# ou rode Narrador_de_Cenas.ipynb
 ```
 
-O artefato sai em `models/narrador_cenas.onnx`.
-
-### 3) App web (Streamlit)
+### 3) App (arquivo ou webcam)
 
 ```bash
 streamlit run app/streamlit_app.py
 ```
 
-- Faça upload de um vídeo **ou** use um exemplo em `sample_data/`
-- Ative **Monitoramento** e informe `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` para receber a narração no Telegram
-
-Variáveis de ambiente (opcional):
-
-```bash
-export TELEGRAM_BOT_TOKEN="123:ABC..."
-export TELEGRAM_CHAT_ID="999999999"
-```
-
-## Telegram — monitoramento
-
-1. Crie um bot com [@BotFather](https://t.me/BotFather) e copie o token  
-2. Envie `/start` ao bot e descubra o chat id (ex.: via `@userinfobot`)  
-3. No Streamlit, ligue **Ativar monitoramento** e narre um vídeo — a cena lida é enviada como mensagem
+Telegram (opcional): `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`.
 
 ## Estrutura
 
 ```text
 Entrega 3 - Narrador de Cenas/
-├── Narrador_de_Cenas.ipynb   # aula: treino + métricas + ONNX
-├── app/
-│   ├── streamlit_app.py
-│   ├── inference.py
-│   ├── narration.py
-│   ├── telegram_notify.py
-│   └── model_arch.py
-├── scripts/
-│   ├── download_ucf_subset.py
-│   └── train_and_export.py
+├── ROTEIRO_APRESENTACAO.md
+├── Narrador_de_Cenas.ipynb
+├── app/streamlit_app.py      # arquivo + webcam
 ├── models/narrador_cenas.onnx
-├── sample_data/              # vídeos de exemplo
-└── requirements.txt
+├── sample_data/
+└── scripts/
+    ├── download_kinetics_subset.py
+    ├── generate_demo_dataset.py
+    ├── build_frames_dataset.py
+    ├── prepare_custom_actions.md
+    └── train_and_export.py
 ```
-
-## Observação pedagógica
-
-Narração completa livre (captioning open-ended) exigiria modelos de linguagem multimodal pesados. Nesta entrega, a estratégia alinhada à aula é: **classificação de ação por frame → templates de narração → ONNX deployável**, cobrindo o ciclo completo até a aplicação web e o alerta no Telegram.
