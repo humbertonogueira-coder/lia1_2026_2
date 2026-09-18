@@ -1,0 +1,13 @@
+# Dataset grande — baixar via notebook/script
+data/UCF101_subset.tar.gz
+data/UCF101_subset/
+data/frames/
+data/.cache/
+
+# Checkpoints intermediários
+models/*.pth
+__pycache__/
+*.pyc
+.venv/
+.env
+.ipynb_checkpoints/
