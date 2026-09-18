@@ -1,0 +1,10 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/Entregas - Humberto Nogueira do Carmo/Entrega 3 - Narrador de Cenas/.venv/bin/python",
+  "jupyter.kernels.filter": [
+    {
+      "type": "pythonEnvironment",
+      "path": "${workspaceFolder}/Entregas - Humberto Nogueira do Carmo/Entrega 3 - Narrador de Cenas/.venv/bin/python"
+    }
+  ],
+  "notebook.defaultFormatter": "none"
+}
