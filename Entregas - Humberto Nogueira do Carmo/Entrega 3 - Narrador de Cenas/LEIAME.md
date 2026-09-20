@@ -24,7 +24,9 @@ Futuro: web pública (upload / câmera IP)
 1. Abra [`Narrador_de_Cenas.ipynb`](Narrador_de_Cenas.ipynb) no Google Colab (upload ou Drive).
 2. **Runtime → Change runtime type → GPU** (opcional).
 3. Execute as células até a exportação ONNX.
-4. Baixe `narrador_cenas.onnx` (a célula final chama `files.download` no Colab).
+4. Após o `%pip`, use **Runtime → Restart session** e continue pelos imports.
+5. Avisos de conflito de `protobuf` com pacotes Google do Colab podem ser ignorados se `import torch` / `import cv2` funcionarem.
+6. Baixe `narrador_cenas.onnx` (a célula final chama `files.download` no Colab).
 
 O notebook gera um dataset demo automaticamente se `data/frames` não existir. Para dados reais, prepare frames no PC e faça upload, ou use os scripts em `scripts/`.
 
