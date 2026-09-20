@@ -10,5 +10,7 @@ pip install ipykernel
 python -m ipykernel install --user --name narrador-cenas --display-name "Python (Narrador)"
 
 Write-Host ""
-Write-Host "OK. No Cursor: abra Narrador_de_Cenas.ipynb e escolha o kernel Python (Narrador)."
-Write-Host "Demo: streamlit run app/streamlit_app.py"
+Write-Host "OK. Ambiente pronto."
+Write-Host "1) Coloque o ONNX do Colab em: models\narrador_cenas.onnx"
+Write-Host "2) Rode: streamlit run app/streamlit_app.py"
+Write-Host "Guia: CURSOR_POS_COLAB.md"

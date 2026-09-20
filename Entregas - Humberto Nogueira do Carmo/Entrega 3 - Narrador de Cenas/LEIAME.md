@@ -32,22 +32,22 @@ O notebook gera um dataset demo automaticamente se `data/frames` não existir. P
 
 ## Fase 2 — Aula no PC (Streamlit + Telegram)
 
-```bash
-cd "Entregas - Humberto Nogueira do Carmo/Entrega 3 - Narrador de Cenas"
-python -m venv .venv
-# Windows: .venv\Scripts\activate
-source .venv/bin/activate
-pip install -r requirements.txt
+Guia completo no Cursor (Windows): [`CURSOR_POS_COLAB.md`](CURSOR_POS_COLAB.md).
 
-# copie o ONNX baixado do Colab para models/narrador_cenas.onnx
+```powershell
+cd "Entregas - Humberto Nogueira do Carmo\Entrega 3 - Narrador de Cenas"
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+# copie o ONNX do Colab para models\narrador_cenas.onnx
 streamlit run app/streamlit_app.py
 ```
 
 - Compartilhe a tela do navegador (`localhost:8501`).
 - Modo **Webcam** para porta / andar / levantar / palmas.
-- Telegram: toggle **Ativar monitoramento** + `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`.
+- Telegram: toggle **Ativar monitoramento** + token / chat id.
 
-Roteiro detalhado: [`ROTEIRO_APRESENTACAO.md`](ROTEIRO_APRESENTACAO.md).
+Roteiro da apresentação: [`ROTEIRO_APRESENTACAO.md`](ROTEIRO_APRESENTACAO.md).
 
 ### Windows — WinError 5 (`cv2.pyd`)
 

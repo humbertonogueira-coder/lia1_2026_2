@@ -32,7 +32,9 @@
 3. Execute todas as células até o download do `.onnx`.
 4. Guarde `narrador_cenas.onnx` (já existe um no repo em `models/` se quiser pular o treino).
 
-### B) PC da aula
+### B) PC da aula (Cursor)
+
+Guia detalhado: [`CURSOR_POS_COLAB.md`](CURSOR_POS_COLAB.md).
 
 ```powershell
 cd "Entregas - Humberto Nogueira do Carmo\Entrega 3 - Narrador de Cenas"
