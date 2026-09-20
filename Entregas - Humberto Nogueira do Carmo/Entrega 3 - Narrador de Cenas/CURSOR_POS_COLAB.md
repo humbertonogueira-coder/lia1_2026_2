@@ -3,6 +3,38 @@
 Você **não** abre o `.ipynb` de novo para a demo da aula.  
 No Cursor você sobe o **Narrador** com o ONNX (preferência: `Narrar.py` / `.bat`).
 
+## Fluxo local → GitHub (padrão)
+
+As alterações relevantes nascem **no seu PC**, na pasta local do Cursor. O GitHub recebe o código **depois**, quando você fizer `push`.
+
+| Onde | Papel |
+|------|--------|
+| Pasta local (Cursor Windows) | Fonte principal — editar e testar aqui |
+| GitHub | Backup / entrega / PR depois do seu `push` |
+| Cloud Agent | Só se você pedir ajuda remota; no PC rode `git pull` |
+
+### Sincronizar uma vez (puxar do GitHub para o PC)
+
+Na raiz do repo (`lia1_2026_2`), no PowerShell:
+
+```powershell
+git fetch origin
+git checkout cursor/narrar-telegram-ao-vivo-735f
+git pull origin cursor/narrar-telegram-ao-vivo-735f
+```
+
+### Depois de editar no PC (subir para o GitHub)
+
+```powershell
+git add .
+git commit -m "sua mensagem"
+git push origin cursor/narrar-telegram-ao-vivo-735f
+```
+
+Para mudanças só no PC: use o **Agent local** do Cursor (não Cloud) ou edite os arquivos você mesmo. O Cloud Agent **não grava** em `C:\Users\...` — ele só altera o remoto/GitHub.
+
+---
+
 ## 1) Abrir a pasta no Cursor
 
 **File → Open Folder** →
@@ -97,12 +129,14 @@ Depois: duplo clique em `iniciar_narrador.bat` **ou** `streamlit run app/streaml
 
 ## Checklist
 
+- [ ] Branch atualizada no PC (`git pull` da branch do Narrador)  
 - [ ] Pasta Entrega 3 aberta no Cursor  
 - [ ] `models\narrador_cenas.onnx` (do Colab)  
-- [ ] `.venv` criado + `pip install -r requirements.txt`  
+- [ ] `.venv` criado + pacotes instalados  
 - [ ] `.env` com `TELEGRAM_BOT_TOKEN`  
 - [ ] `iniciar_narrador.bat` abre sem erro  
 - [ ] Alunos: `/start` → teclado AO VIVO  
 - [ ] AO VIVO narra e chega no Telegram  
+- [ ] Suas edições: commit + push **do PC** quando quiser publicar  
 
 A app web pública (upload / câmera IP) fica para uma fase futura.
