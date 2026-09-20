@@ -1,13 +1,13 @@
 # Entrega 3 — Narrador de Cenas
 
-**Fluxo oficial:** Google Colab (treino + ONNX) → Streamlit no PC (aula + Telegram) → app web pública (futuro).
+**Fluxo oficial:** Google Colab (treino + ONNX) → `Narrar.py` / Streamlit no PC (aula + Telegram AO VIVO) → app web pública (futuro).
 
 ## Pipeline
 
 ```text
 Colab/GPU → CNN Residual → narrador_cenas.onnx
          ↓
-PC (aula): Streamlit (arquivo | webcam) + Telegram
+PC (aula): Narrar.py + Telegram (AO VIVO)  |  Streamlit opcional
          ↓
 Futuro: web pública (upload / câmera IP)
 ```
@@ -30,9 +30,11 @@ Futuro: web pública (upload / câmera IP)
 
 O notebook gera um dataset demo automaticamente se `data/frames` não existir. Para dados reais, prepare frames no PC e faça upload, ou use os scripts em `scripts/`.
 
-## Fase 2 — Aula no PC (Streamlit + Telegram)
+## Fase 2 — Aula no PC (Narrar.py + Telegram AO VIVO)
 
 Guia completo no Cursor (Windows): [`CURSOR_POS_COLAB.md`](CURSOR_POS_COLAB.md).
+
+### Setup único
 
 ```powershell
 cd "Entregas - Humberto Nogueira do Carmo\Entrega 3 - Narrador de Cenas"
@@ -40,18 +42,28 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 # copie o ONNX do Colab para models\narrador_cenas.onnx
-streamlit run app/streamlit_app.py
+copy .env.example .env
+# edite .env e cole TELEGRAM_BOT_TOKEN do @BotFather
 ```
 
-- Compartilhe a tela do navegador (`localhost:8501`).
-- Modo **Webcam** para porta / andar / levantar / palmas.
-- Telegram: toggle **Ativar monitoramento** + token / chat id.
+### Na apresentação (sem digitar terminal)
+
+1. Duplo clique em **`iniciar_narrador.bat`**
+2. Cada aluno no Telegram: **`/start`** no bot → aparece o teclado **AO VIVO | PARAR**
+3. Alguém toca **AO VIVO** → a webcam do PC narra e **todos os cadastrados** recebem as mensagens
+4. **PARAR** encerra o vivo
+
+### Streamlit (opcional, demo visual)
+
+```powershell
+streamlit run app/streamlit_app.py
+```
 
 Roteiro da apresentação: [`ROTEIRO_APRESENTACAO.md`](ROTEIRO_APRESENTACAO.md).
 
 ### Windows — WinError 5 (`cv2.pyd`)
 
-Não rode o treino no Python global (`AppData\\Roaming\\Python\\...`). Use **Colab** para o ONNX. No PC use só o `.venv` do Streamlit. Se o pip falhar com Acesso negado em `cv2.pyd`: feche Cursor/kernels, desinstale/reinstale `opencv-python-headless` **dentro do `.venv`**.
+Não rode o treino no Python global (`AppData\\Roaming\\Python\\...`). Use **Colab** para o ONNX. No PC use só o `.venv`. Se o pip falhar com Acesso negado em `cv2.pyd`: feche Cursor/kernels, desinstale/reinstale `opencv-python-headless` **dentro do `.venv`**.
 
 ## Fase 3 — Web pública (futuro)
 
@@ -64,9 +76,12 @@ Mesmo ONNX em um serviço hospedado:
 
 ```text
 Entrega 3 - Narrador de Cenas/
+├── Narrar.py                 # classe + AO VIVO (webcam + Telegram)
+├── iniciar_narrador.bat      # duplo clique no Windows
+├── .env.example              # TELEGRAM_BOT_TOKEN=...
 ├── Narrador_de_Cenas.ipynb   # Colab → ONNX
-├── ROTEIRO_APRESENTACAO.md
-├── app/streamlit_app.py      # arquivo + webcam + Telegram
+├── app/streamlit_app.py      # demo visual opcional
+├── app/telegram_notify.py    # cadastro + teclado AO VIVO + broadcast
 ├── models/narrador_cenas.onnx
 ├── sample_data/
 └── scripts/

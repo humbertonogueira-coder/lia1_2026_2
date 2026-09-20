@@ -1,11 +1,11 @@
-# Roteiro de apresentação — Colab → Streamlit → Telegram
+# Roteiro de apresentação — Colab → Narrar.py / Telegram AO VIVO
 
 ## Visão geral
 
 | Fase | Onde | O que fazer |
 |------|------|-------------|
 | 1 | **Google Colab** | Treinar CNN, gerar e baixar `narrador_cenas.onnx` |
-| 2 | **PC na sala** | Streamlit + webcam + Telegram (tela compartilhada) |
+| 2 | **PC na sala** | `iniciar_narrador.bat` + Telegram AO VIVO (Streamlit opcional) |
 | 3 | Futuro | App web pública (upload / câmera IP) |
 
 ## Classes da demo (8)
@@ -41,41 +41,45 @@ cd "Entregas - Humberto Nogueira do Carmo\Entrega 3 - Narrador de Cenas"
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+copy .env.example .env
+# edite .env → TELEGRAM_BOT_TOKEN do @BotFather
 # copie o ONNX do Colab para models\narrador_cenas.onnx
-streamlit run app/streamlit_app.py
 ```
 
-Teste em casa: arquivo `opening_door.mp4` + uma captura de webcam.
+Teste em casa: duplo clique em `iniciar_narrador.bat` + `/start` no bot.
 
-### C) Telegram (opcional)
+### C) Telegram
 
-1. `@BotFather` → token  
-2. Chat id  
-3. Anote para colar na sidebar do Streamlit  
+1. `@BotFather` → token no `.env` (`TELEGRAM_BOT_TOKEN=...`)
+2. No dia: alunos mandam `/start` → teclado **AO VIVO | PARAR**
 
 ---
 
 ## No dia (~10–15 min)
 
 ### 1) Contexto (1 min)
-- Colab gerou o ONNX; agora a app consome o modelo.
+- Colab gerou o ONNX; agora o PC narra ao vivo.
 - Ações: porta, andar, levantar, palmas.
 
 ### 2) (Opcional) Mostrar 30s do Colab
 - Abrir o notebook já executado / curvas / arquivo ONNX baixado.
 
-### 3) Streamlit na tela compartilhada (5–7 min)
+### 3) AO VIVO na sala (5–7 min)
+1. Duplo clique em **`iniciar_narrador.bat`**
+2. Alunos: **`/start`** no bot
+3. Alguém toca **AO VIVO** → webcam do PC → narração no Telegram de todos
+4. Demonstrar porta / andar / levantar / palmas
+5. **PARAR**
+
+### 4) (Opcional) Streamlit na tela
 ```bash
 streamlit run app/streamlit_app.py
 ```
-Ordem:
-1. **Arquivo** → `opening_door.mp4`
-2. **Webcam** → porta / andar / levantar / palmas → **Narrar captura**
-3. Telegram com monitoramento ligado
+Arquivo `opening_door.mp4` + captura webcam.
 
-### 4) Fechamento
+### 5) Fechamento
 ```text
-Colab → ONNX → Streamlit (webcam) → Telegram
+Colab → ONNX → Narrar.py (webcam) → Telegram AO VIVO
 ```
 Próximo passo do projeto: web pública com upload e câmera IP.
 
@@ -86,9 +90,9 @@ Próximo passo do projeto: web pública com upload e câmera IP.
 | Problema | Ação |
 |----------|------|
 | Colab sem GPU / sem tempo | Use `models/narrador_cenas.onnx` já no repositório |
-| WinError 5 no Windows | Não treine no PC; só Streamlit no `.venv` |
-| Webcam sem permissão | Use só `sample_data/` |
-| Telegram falha | Mostre a narração na tela |
+| WinError 5 no Windows | Não treine no PC; só `.venv` + `iniciar_narrador.bat` |
+| Webcam sem permissão | Use Streamlit + `sample_data/` |
+| Telegram falha / token vazio | Mostre a narração no console do `.bat` ou no Streamlit |
 
 ## O que NÃO fazer no Colab na apresentação
 - Streamlit ao vivo

@@ -6,6 +6,7 @@ data/kinetics_annotations/
 data/custom_actions/
 data/frames/
 data/.cache/
+data/telegram_subscribers.json
 
 # Checkpoints intermediários
 models/*.pth

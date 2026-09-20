@@ -1,6 +1,6 @@
 """
 Narrador de Cenas — Streamlit
-Modos: arquivo de vídeo OU webcam → ONNX → narração (+ Telegram)
+Modos: arquivo de vídeo OU webcam → ONNX → narração (+ Telegram broadcast)
 """
 
 from __future__ import annotations
@@ -13,10 +13,13 @@ from pathlib import Path
 import cv2
 import numpy as np
 import streamlit as st
+from dotenv import load_dotenv
 
 APP_DIR = Path(__file__).resolve().parent
 ROOT = APP_DIR.parent
 sys.path.insert(0, str(APP_DIR))
+
+load_dotenv(ROOT / ".env")
 
 from inference import narrate_image, narrate_video  # noqa: E402
 from telegram_notify import TelegramNotifier  # noqa: E402
@@ -43,11 +46,20 @@ with st.sidebar:
 
     st.divider()
     st.subheader("Monitoramento Telegram")
+    st.caption(
+        "Token no `.env` (`TELEGRAM_BOT_TOKEN`). "
+        "Usuários cadastrados com /start recebem o broadcast. "
+        "Para AO VIVO contínuo use `iniciar_narrador.bat` / `Narrar.py`."
+    )
     monitoring = st.toggle("Ativar monitoramento", value=False)
     bot_token = st.text_input(
-        "Bot token", value=os.getenv("TELEGRAM_BOT_TOKEN", ""), type="password"
+        "Bot token",
+        value=os.getenv("TELEGRAM_BOT_TOKEN", ""),
+        type="password",
     )
-    chat_id = st.text_input("Chat ID", value=os.getenv("TELEGRAM_CHAT_ID", ""))
+    notifier_preview = TelegramNotifier(bot_token=bot_token)
+    n_subs = len(notifier_preview.list_subscribers()) if bot_token else 0
+    st.write(f"Cadastrados: **{n_subs}**")
 
 mode = st.radio(
     "Fonte da cena",
@@ -59,13 +71,19 @@ mode = st.radio(
 def maybe_telegram(summary: str, name: str) -> None:
     if not monitoring:
         return
-    notifier = TelegramNotifier(bot_token=bot_token, chat_id=chat_id)
+    notifier = TelegramNotifier(bot_token=bot_token)
     if not notifier.configured:
-        st.warning("Monitoramento ligado, mas token/chat_id estão vazios.")
+        st.warning("Monitoramento ligado, mas TELEGRAM_BOT_TOKEN está vazio no .env.")
+        return
+    if not notifier.list_subscribers():
+        st.warning(
+            "Nenhum usuário cadastrado. Peça /start no bot (teclado AO VIVO | PARAR)."
+        )
         return
     try:
-        notifier.send_scene_alert(summary, video_name=name)
-        st.info("Aviso enviado ao Telegram.")
+        results = notifier.send_scene_alert(summary, video_name=name)
+        ok = sum(1 for r in results if r.get("ok") is not False and "error" not in r)
+        st.info(f"Aviso enviado ao Telegram ({ok}/{len(results)} cadastrados).")
     except Exception as exc:  # noqa: BLE001
         st.error(f"Falha ao enviar ao Telegram: {exc}")
 
