@@ -130,10 +130,12 @@ class Narrar:
         self.checar_modelo()
         intervalo = float(intervalo_s if intervalo_s is not None else self.intervalo_s)
         print(f"[AO VIVO] Abrindo webcam {self.webcam_index}…")
-        print("[AO VIVO] Deve aparecer a janela 'Narrador AO VIVO'.")
-        print("[AO VIVO] PARAR no Telegram ou Ctrl+C / tecla Q na janela.")
+        print("[AO VIVO] PARAR no Telegram, tecla Q (se houver janela) ou Ctrl+C.")
 
         cap = None
+        preview = None
+        mostrar_janela = True
+        janela = "Narrador AO VIVO"
         try:
             cap = self._abrir_webcam()
             print("[AO VIVO] Webcam ligada. Narrando…")
@@ -146,7 +148,6 @@ class Narrar:
                 )
             return
 
-        janela = "Narrador AO VIVO"
         try:
             while self.telegram.live_requested:
                 self.telegram.poll_updates(timeout=0)
@@ -157,7 +158,6 @@ class Narrar:
                     if not ok or frame is None:
                         raise RuntimeError("Falha ao ler frame da webcam.")
 
-                    # Preview local para confirmar que a câmera está ativa
                     preview = frame.copy()
                     cv2.putText(
                         preview,
@@ -169,11 +169,20 @@ class Narrar:
                         2,
                         cv2.LINE_AA,
                     )
-                    cv2.imshow(janela, preview)
-                    tecla = cv2.waitKey(1) & 0xFF
-                    if tecla in (ord("q"), ord("Q"), 27):
-                        self.telegram.live_requested = False
-                        break
+                    if mostrar_janela:
+                        try:
+                            cv2.imshow(janela, preview)
+                            tecla = cv2.waitKey(1) & 0xFF
+                            if tecla in (ord("q"), ord("Q"), 27):
+                                self.telegram.live_requested = False
+                                break
+                        except Exception:  # noqa: BLE001
+                            # opencv-python-headless não tem GUI — segue sem janela
+                            mostrar_janela = False
+                            print(
+                                "[AO VIVO] Sem janela de preview "
+                                "(instale opencv-python se quiser ver a câmera)."
+                            )
 
                     result = self.narrar_frame(frame)
                     if self._deve_enviar(result["class"]):
@@ -188,17 +197,24 @@ class Narrar:
 
                 fim = time.time() + intervalo
                 while time.time() < fim and self.telegram.live_requested:
-                    cv2.imshow(janela, preview if "preview" in dir() else frame)
-                    tecla = cv2.waitKey(1) & 0xFF
-                    if tecla in (ord("q"), ord("Q"), 27):
-                        self.telegram.live_requested = False
-                        break
+                    if mostrar_janela and preview is not None:
+                        try:
+                            cv2.imshow(janela, preview)
+                            tecla = cv2.waitKey(1) & 0xFF
+                            if tecla in (ord("q"), ord("Q"), 27):
+                                self.telegram.live_requested = False
+                                break
+                        except Exception:  # noqa: BLE001
+                            mostrar_janela = False
                     restante = max(0.05, min(0.4, fim - time.time()))
                     self.telegram.poll_updates(timeout=restante)
         finally:
             if cap is not None:
                 cap.release()
-            cv2.destroyAllWindows()
+            try:
+                cv2.destroyAllWindows()
+            except Exception:  # noqa: BLE001
+                pass
             print("[AO VIVO] Webcam desligada / pausado.")
 
     def rodar(self) -> None:
