@@ -1,81 +1,73 @@
 # Entrega 3 — Narrador de Cenas
 
-Aplicação de visão computacional que **lê um vídeo**, classifica ações quadro a quadro (subset do **UCF-101**) e gera uma **narração em português**. O modelo é treinado em PyTorch (CNN Residual da aula), exportado para **ONNX** e consumido por um app **Streamlit**, com opção de **monitoramento via Telegram**.
+**Fluxo oficial:** Google Colab (treino + ONNX) → Streamlit no PC (aula + Telegram) → app web pública (futuro).
 
 ## Pipeline
 
 ```text
-UCF-101 subset → frames → CNN Residual → .onnx → Streamlit (+ Telegram)
+Colab/GPU → CNN Residual → narrador_cenas.onnx
+         ↓
+PC (aula): Streamlit (arquivo | webcam) + Telegram
+         ↓
+Futuro: web pública (upload / câmera IP)
 ```
 
-## Classes (10 ações)
+## Classes (8)
 
-ApplyEyeMakeup, ApplyLipstick, Archery, BabyCrawling, BalanceBeam, BandMarching, BaseballPitch, Basketball, BasketballDunk, BenchPress
+`opening_door`, `closing_door`, `walking`, `clapping`, `stretching_arm`, `pushing_cart`, `standing_up`, `sitting_down`
 
-## Como executar
+- Porta: **Kinetics-700** (`opening door` / `closing door` não existem no Kinetics-400).
+- Sentar/levantar: clips próprios (`scripts/prepare_custom_actions.md`) ou dataset demo no Colab.
 
-### 1) Ambiente
+## Fase 1 — Colab (até o ONNX)
 
-```bash
-cd "Entregas - Humberto Nogueira do Carmo/Entrega 3 - Narrador de Cenas"
+1. Abra [`Narrador_de_Cenas.ipynb`](Narrador_de_Cenas.ipynb) no Google Colab (upload ou Drive).
+2. **Runtime → Change runtime type → GPU** (opcional).
+3. Execute as células até a exportação ONNX.
+4. Após o `%pip`, use **Runtime → Restart session** e continue pelos imports.
+5. Avisos de conflito de `protobuf` com pacotes Google do Colab podem ser ignorados se `import torch` / `import cv2` funcionarem.
+6. Baixe `narrador_cenas.onnx` (a célula final chama `files.download` no Colab).
+
+O notebook gera um dataset demo automaticamente se `data/frames` não existir. Para dados reais, prepare frames no PC e faça upload, ou use os scripts em `scripts/`.
+
+## Fase 2 — Aula no PC (Streamlit + Telegram)
+
+Guia completo no Cursor (Windows): [`CURSOR_POS_COLAB.md`](CURSOR_POS_COLAB.md).
+
+```powershell
+cd "Entregas - Humberto Nogueira do Carmo\Entrega 3 - Narrador de Cenas"
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-```
-
-### 2) Treinar e exportar ONNX
-
-No Colab/local, rode o notebook `Narrador_de_Cenas.ipynb` **ou**:
-
-```bash
-# baixa o subset (se ainda não existir) e treina
-python scripts/download_ucf_subset.py
-python scripts/train_and_export.py --epochs 12
-```
-
-O artefato sai em `models/narrador_cenas.onnx`.
-
-### 3) App web (Streamlit)
-
-```bash
+# copie o ONNX do Colab para models\narrador_cenas.onnx
 streamlit run app/streamlit_app.py
 ```
 
-- Faça upload de um vídeo **ou** use um exemplo em `sample_data/`
-- Ative **Monitoramento** e informe `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` para receber a narração no Telegram
+- Compartilhe a tela do navegador (`localhost:8501`).
+- Modo **Webcam** para porta / andar / levantar / palmas.
+- Telegram: toggle **Ativar monitoramento** + token / chat id.
 
-Variáveis de ambiente (opcional):
+Roteiro da apresentação: [`ROTEIRO_APRESENTACAO.md`](ROTEIRO_APRESENTACAO.md).
 
-```bash
-export TELEGRAM_BOT_TOKEN="123:ABC..."
-export TELEGRAM_CHAT_ID="999999999"
-```
+### Windows — WinError 5 (`cv2.pyd`)
 
-## Telegram — monitoramento
+Não rode o treino no Python global (`AppData\\Roaming\\Python\\...`). Use **Colab** para o ONNX. No PC use só o `.venv` do Streamlit. Se o pip falhar com Acesso negado em `cv2.pyd`: feche Cursor/kernels, desinstale/reinstale `opencv-python-headless` **dentro do `.venv`**.
 
-1. Crie um bot com [@BotFather](https://t.me/BotFather) e copie o token  
-2. Envie `/start` ao bot e descubra o chat id (ex.: via `@userinfobot`)  
-3. No Streamlit, ligue **Ativar monitoramento** e narre um vídeo — a cena lida é enviada como mensagem
+## Fase 3 — Web pública (futuro)
+
+Mesmo ONNX em um serviço hospedado:
+
+- upload de vídeo
+- stream de câmera IP / RTSP → frames → narração
 
 ## Estrutura
 
 ```text
 Entrega 3 - Narrador de Cenas/
-├── Narrador_de_Cenas.ipynb   # aula: treino + métricas + ONNX
-├── app/
-│   ├── streamlit_app.py
-│   ├── inference.py
-│   ├── narration.py
-│   ├── telegram_notify.py
-│   └── model_arch.py
-├── scripts/
-│   ├── download_ucf_subset.py
-│   └── train_and_export.py
+├── Narrador_de_Cenas.ipynb   # Colab → ONNX
+├── ROTEIRO_APRESENTACAO.md
+├── app/streamlit_app.py      # arquivo + webcam + Telegram
 ├── models/narrador_cenas.onnx
-├── sample_data/              # vídeos de exemplo
-└── requirements.txt
+├── sample_data/
+└── scripts/
 ```
-
-## Observação pedagógica
-
-Narração completa livre (captioning open-ended) exigiria modelos de linguagem multimodal pesados. Nesta entrega, a estratégia alinhada à aula é: **classificação de ação por frame → templates de narração → ONNX deployável**, cobrindo o ciclo completo até a aplicação web e o alerta no Telegram.

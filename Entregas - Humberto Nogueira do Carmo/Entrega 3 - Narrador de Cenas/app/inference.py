@@ -102,6 +102,20 @@ def sample_video_frames(
     return frames
 
 
+def narrate_image(
+    image_bgr: np.ndarray,
+    model_path: str | Path,
+) -> dict[str, Any]:
+    """Classifica um único frame (ex.: captura da webcam)."""
+    from narration import narrate_action
+
+    session, cfg = load_onnx_model(model_path)
+    pred = predict_frame(session, cfg, image_bgr)
+    pred["caption"] = narrate_action(pred["class"], pred["confidence"])
+    pred["summary"] = pred["caption"]
+    return pred
+
+
 def narrate_video(
     video_path: str | Path,
     model_path: str | Path,
