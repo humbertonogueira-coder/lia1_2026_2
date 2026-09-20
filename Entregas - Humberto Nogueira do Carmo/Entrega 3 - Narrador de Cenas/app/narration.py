@@ -1,4 +1,4 @@
-"""Templates de narração em português a partir das classes UCF-101."""
+"""Templates de narração em português — Kinetics (porta/andar) + ações de sala."""
 
 from __future__ import annotations
 
@@ -6,29 +6,25 @@ from collections import Counter
 from typing import Iterable
 
 NARRATION_TEMPLATES: dict[str, str] = {
-    "ApplyEyeMakeup": "Na cena, alguém está aplicando maquiagem nos olhos.",
-    "ApplyLipstick": "Na cena, alguém está passando batom.",
-    "Archery": "Na cena, uma pessoa está praticando arco e flecha.",
-    "BabyCrawling": "Na cena, um bebê está engatinhando.",
-    "BalanceBeam": "Na cena, uma ginasta está se equilibrando na trave.",
-    "BandMarching": "Na cena, uma banda está marchando em formação.",
-    "BaseballPitch": "Na cena, um jogador está arremessando no beisebol.",
-    "Basketball": "Na cena, alguém está jogando basquete.",
-    "BasketballDunk": "Na cena, um jogador está enterrando a bola no basquete.",
-    "BenchPress": "Na cena, alguém está fazendo exercício de supino.",
+    "opening_door": "Na cena, alguém está abrindo a porta.",
+    "closing_door": "Na cena, alguém está fechando a porta.",
+    "walking": "Na cena, uma pessoa está andando.",
+    "clapping": "Na cena, alguém está batendo palmas.",
+    "stretching_arm": "Na cena, alguém está alongando o braço.",
+    "pushing_cart": "Na cena, alguém está empurrando um carrinho.",
+    "standing_up": "Na cena, uma pessoa está se levantando da cadeira.",
+    "sitting_down": "Na cena, uma pessoa está se sentando.",
 }
 
 CLASS_LABELS_PT: dict[str, str] = {
-    "ApplyEyeMakeup": "maquiagem nos olhos",
-    "ApplyLipstick": "passar batom",
-    "Archery": "arco e flecha",
-    "BabyCrawling": "bebê engatinhando",
-    "BalanceBeam": "trave de equilíbrio",
-    "BandMarching": "banda marchando",
-    "BaseballPitch": "arremesso de beisebol",
-    "Basketball": "basquete",
-    "BasketballDunk": "enterrada no basquete",
-    "BenchPress": "supino",
+    "opening_door": "abrindo a porta",
+    "closing_door": "fechando a porta",
+    "walking": "andando",
+    "clapping": "batendo palmas",
+    "stretching_arm": "alongando o braço",
+    "pushing_cart": "empurrando carrinho",
+    "standing_up": "levantando da cadeira",
+    "sitting_down": "sentando",
 }
 
 
@@ -46,7 +42,6 @@ def summarize_timeline(
     predictions: Iterable[dict],
     min_confidence: float = 0.35,
 ) -> str:
-    """Gera um parágrafo narrativo a partir de previsões frame a frame."""
     filtered = [
         p for p in predictions if float(p.get("confidence", 0)) >= min_confidence
     ]
@@ -66,7 +61,6 @@ def summarize_timeline(
         labels = ", ".join(CLASS_LABELS_PT.get(c, c) for c in secondary)
         parts.append(f"Também aparecem trechos com: {labels}.")
 
-    # Mudanças ao longo do tempo (simplificado)
     changes: list[str] = []
     last = None
     for p in filtered:

@@ -1,8 +1,12 @@
 # Dataset grande — baixar via notebook/script
 data/UCF101_subset.tar.gz
 data/UCF101_subset/
+data/kinetics_subset/
+data/kinetics_annotations/
+data/custom_actions/
 data/frames/
 data/.cache/
+data/telegram_subscribers.json
 
 # Checkpoints intermediários
 models/*.pth
