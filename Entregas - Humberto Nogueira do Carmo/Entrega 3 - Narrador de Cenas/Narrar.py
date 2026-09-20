@@ -99,12 +99,24 @@ class Narrar:
         self._last_class = classe
         self._last_sent_at = time.time()
 
-    def capturar_frame_webcam(self):
-        cap = cv2.VideoCapture(self.webcam_index)
+    def _abrir_webcam(self):
+        """Abre a webcam e descarta alguns frames iniciais (foco/exposição)."""
+        # CAP_DSHOW evita travar em muitos notebooks Windows
+        cap = cv2.VideoCapture(self.webcam_index, cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            cap = cv2.VideoCapture(self.webcam_index)
         if not cap.isOpened():
             raise RuntimeError(
-                f"Não foi possível abrir a webcam (índice {self.webcam_index})."
+                f"Não foi possível abrir a webcam (índice {self.webcam_index}).\n"
+                "Feche Zoom/Teams/Camera app, permita acesso à câmera no Windows "
+                "e confira WEBCAM_INDEX no .env (tente 0 ou 1)."
             )
+        for _ in range(5):
+            cap.read()
+        return cap
+
+    def capturar_frame_webcam(self):
+        cap = self._abrir_webcam()
         try:
             ok, frame = cap.read()
             if not ok or frame is None:
@@ -117,33 +129,77 @@ class Narrar:
         """Captura webcam em loop enquanto Telegram estiver em AO VIVO."""
         self.checar_modelo()
         intervalo = float(intervalo_s if intervalo_s is not None else self.intervalo_s)
-        print(f"[AO VIVO] Webcam {self.webcam_index} | intervalo {intervalo}s")
-        print("[AO VIVO] Ctrl+C para sair.")
+        print(f"[AO VIVO] Abrindo webcam {self.webcam_index}…")
+        print("[AO VIVO] Deve aparecer a janela 'Narrador AO VIVO'.")
+        print("[AO VIVO] PARAR no Telegram ou Ctrl+C / tecla Q na janela.")
 
-        while self.telegram.live_requested:
-            # Processa teclado PARAR / novos /start sem bloquear demais
-            self.telegram.poll_updates(timeout=1)
-            if not self.telegram.live_requested:
-                break
-            try:
-                frame = self.capturar_frame_webcam()
-                result = self.narrar_frame(frame)
-                if self._deve_enviar(result["class"]):
-                    print(
-                        f"  → {result['class']} ({result['confidence']:.0%}): "
-                        f"{result.get('summary', '')}"
+        cap = None
+        try:
+            cap = self._abrir_webcam()
+            print("[AO VIVO] Webcam ligada. Narrando…")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[AO VIVO] ERRO ao abrir câmera: {exc}")
+            self.telegram.live_requested = False
+            if self.telegram.configured:
+                self.telegram.broadcast(
+                    f"⚠️ Não foi possível abrir a webcam do PC.\n<code>{exc}</code>"
+                )
+            return
+
+        janela = "Narrador AO VIVO"
+        try:
+            while self.telegram.live_requested:
+                self.telegram.poll_updates(timeout=0)
+                if not self.telegram.live_requested:
+                    break
+                try:
+                    ok, frame = cap.read()
+                    if not ok or frame is None:
+                        raise RuntimeError("Falha ao ler frame da webcam.")
+
+                    # Preview local para confirmar que a câmera está ativa
+                    preview = frame.copy()
+                    cv2.putText(
+                        preview,
+                        "AO VIVO - Q para fechar",
+                        (12, 28),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7,
+                        (0, 200, 0),
+                        2,
+                        cv2.LINE_AA,
                     )
-                    if self.telegram.configured:
-                        self._enviar_narracao(result)
-            except Exception as exc:  # noqa: BLE001
-                print(f"[AO VIVO] aviso: {exc}")
-            # Espera intervalo, mas continua escutando o bot
-            fim = time.time() + intervalo
-            while time.time() < fim and self.telegram.live_requested:
-                restante = max(0.2, min(1.0, fim - time.time()))
-                self.telegram.poll_updates(timeout=restante)
+                    cv2.imshow(janela, preview)
+                    tecla = cv2.waitKey(1) & 0xFF
+                    if tecla in (ord("q"), ord("Q"), 27):
+                        self.telegram.live_requested = False
+                        break
 
-        print("[AO VIVO] pausado.")
+                    result = self.narrar_frame(frame)
+                    if self._deve_enviar(result["class"]):
+                        print(
+                            f"  → {result['class']} ({result['confidence']:.0%}): "
+                            f"{result.get('summary', '')}"
+                        )
+                        if self.telegram.configured:
+                            self._enviar_narracao(result)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[AO VIVO] aviso: {exc}")
+
+                fim = time.time() + intervalo
+                while time.time() < fim and self.telegram.live_requested:
+                    cv2.imshow(janela, preview if "preview" in dir() else frame)
+                    tecla = cv2.waitKey(1) & 0xFF
+                    if tecla in (ord("q"), ord("Q"), 27):
+                        self.telegram.live_requested = False
+                        break
+                    restante = max(0.05, min(0.4, fim - time.time()))
+                    self.telegram.poll_updates(timeout=restante)
+        finally:
+            if cap is not None:
+                cap.release()
+            cv2.destroyAllWindows()
+            print("[AO VIVO] Webcam desligada / pausado.")
 
     def rodar(self) -> None:
         """Loop principal: escuta Telegram e liga AO VIVO sob demanda."""
@@ -175,15 +231,19 @@ class Narrar:
 
         print("Telegram OK. Peça aos alunos: /start no bot.")
         print("Teclado: AO VIVO | PARAR")
+        print("A webcam SÓ liga depois que alguém tocar em AO VIVO no Telegram.")
         print("Aguardando… (Ctrl+C encerra)\n")
 
         try:
             while True:
                 live = self.telegram.poll_updates(timeout=25)
                 if live:
+                    print("\n>>> AO VIVO recebido no Telegram — ligando webcam…\n")
                     self.iniciar_ao_vivo()
+                    print("\nAguardando novo AO VIVO… (Ctrl+C encerra)\n")
         except KeyboardInterrupt:
             print("\nEncerrado.")
+            cv2.destroyAllWindows()
 
 
 def main() -> None:
